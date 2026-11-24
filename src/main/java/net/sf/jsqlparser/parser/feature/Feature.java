@@ -1433,8 +1433,8 @@ public enum Feature {
     allowDoubleSlashLineComments(false),
 
     /**
-     * allows DuckDB integer division using {@code //}; disabled by default. When double-slash
-     * line comments are enabled, the lexer treats {@code //} as a comment instead.
+     * allows DuckDB integer division using {@code //}; disabled by default. When double-slash line
+     * comments are enabled, the lexer treats {@code //} as a comment instead.
      */
     allowDoubleSlashIntegerDivision(false),
 
