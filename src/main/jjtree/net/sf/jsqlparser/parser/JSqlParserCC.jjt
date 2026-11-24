@@ -1296,7 +1296,14 @@ public class CCJSqlParser extends AbstractJSqlParser<CCJSqlParser> {
                 continue;
             }
 
+            // Keep the slash tokens separate so that //* remains / followed by a block comment.
+            boolean doubleSlash = op == OP_SLASH && getToken(2).kind == OP_SLASH
+                    && getToken(2).beginLine == t.endLine
+                    && getToken(2).beginColumn == t.endColumn + 1;
             jj_consume_token(op, getToken(1).image);
+            if (doubleSlash) {
+                jj_consume_token(OP_SLASH, getToken(1).image);
+            }
             Token rightFirst = getToken(1);
             Expression right = prattArithRest(PrimaryExpression(), rightFirst, prec + 1);
             // a JSON access chain extends the JsonExpression it started, which already has a node
@@ -1311,6 +1318,7 @@ public class CCJSqlParser extends AbstractJSqlParser<CCJSqlParser> {
             else if (op == OP_JSON_PATH_DELETE || op == OP_JSON_PATH_EXISTS) {
                 left = new JsonOperator(t.image).withLeftExpression(left).withRightExpression(right);
             }
+            else if (doubleSlash) { left = new IntegerDivision("//").withLeftExpression(left).withRightExpression(right); }
             else if (op == OP_SLASH)  { Division         r = new Division();         r.setLeftExpression(left); r.setRightExpression(right); left = r; }
             else if (op == S_HASH_OPERATOR) { Intersects r = new Intersects(); r.setLeftExpression(left); r.setRightExpression(right); left = r; }
             else if (op == OP_CARET)  { net.sf.jsqlparser.expression.operators.arithmetic.BitwiseXor r = new net.sf.jsqlparser.expression.operators.arithmetic.BitwiseXor(); r.setLeftExpression(left); r.setRightExpression(right); left = r; }
