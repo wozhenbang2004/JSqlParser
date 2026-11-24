@@ -12,6 +12,7 @@ package net.sf.jsqlparser.statement.select;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.LambdaExpression;
+import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.parser.AbstractJSqlParser.Dialect;
 import net.sf.jsqlparser.schema.Table;
@@ -965,34 +966,49 @@ public class DuckDBTest {
     @Test
     void testIntegerDivisionOperator() throws JSQLParserException {
         TestUtils.assertSqlCanBeParsedAndDeparsed(
-                "SELECT 7 // 2, -7 // 2, 7 // -2, 7.0 // 2", true);
-        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7//2"),
+                "SELECT 7 // 2, -7 // 2, 7 // -2, 7.0 // 2", true,
+                CCJSqlParser::withDoubleSlashIntegerDivision);
+        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7//2",
+                parser -> parser.withDoubleSlashIntegerDivision(true)),
                 "SELECT 7 // 2");
         Assertions.assertEquals("IntegerDivision(Multiplication(2, 9), 4)",
-                tree(CCJSqlParserUtil.parseExpression("2 * 9 // 4", false)));
+                tree(CCJSqlParserUtil.parseExpression("2 * 9 // 4", false,
+                        CCJSqlParser::withDoubleSlashIntegerDivision)));
         Assertions.assertEquals("IntegerDivision(IntegerDivision(20, 3), 2)",
-                tree(CCJSqlParserUtil.parseExpression("20 // 3 // 2", false)));
+                tree(CCJSqlParserUtil.parseExpression("20 // 3 // 2", false,
+                        CCJSqlParser::withDoubleSlashIntegerDivision)));
         Assertions.assertEquals("Addition(1, Multiplication(IntegerDivision(7, 2), 3))",
-                tree(CCJSqlParserUtil.parseExpression("1 + 7 // 2 * 3", false)));
+                tree(CCJSqlParserUtil.parseExpression("1 + 7 // 2 * 3", false,
+                        CCJSqlParser::withDoubleSlashIntegerDivision)));
+        Assertions.assertThrows(JSQLParserException.class,
+                () -> CCJSqlParserUtil.parse("SELECT 7 // 2"));
+        Assertions.assertThrows(JSQLParserException.class, () -> CCJSqlParserUtil.parse(
+                "SELECT 7 // 2", parser -> parser.withDoubleSlashIntegerDivision()
+                        .withDoubleSlashIntegerDivision(false)));
     }
 
     @Test
     void testIntegerDivisionCommentBoundaries() throws JSQLParserException {
-        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7 //*x*/ 2"),
+        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7 //*x*/ 2",
+                CCJSqlParser::withDoubleSlashIntegerDivision),
                 "SELECT 7 / 2");
-        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7 // /*x*/ 2"),
+        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7 // /*x*/ 2",
+                CCJSqlParser::withDoubleSlashIntegerDivision),
                 "SELECT 7 // 2");
         for (String sql : new String[] {"SELECT 7 / / 2", "SELECT 7 /\n/ 2",
                 "SELECT 7 / /*x*/ / 2"}) {
-            Assertions.assertThrows(JSQLParserException.class, () -> CCJSqlParserUtil.parse(sql));
+            Assertions.assertThrows(JSQLParserException.class, () -> CCJSqlParserUtil.parse(sql,
+                    CCJSqlParser::withDoubleSlashIntegerDivision));
         }
         for (Dialect dialect : new Dialect[] {Dialect.H2, Dialect.SNOWFLAKE}) {
             TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse(
-                    "SELECT 7 // 2\nFROM t", parser -> parser.withDialect(dialect)),
+                    "SELECT 7 // 2\nFROM t", parser -> parser.withDialect(dialect)
+                            .withDoubleSlashIntegerDivision()),
                     "SELECT 7 FROM t");
         }
         TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse(
-                "SELECT 7 // 2\nFROM t", parser -> parser.withDoubleSlashLineComments(true)),
+                "SELECT 7 // 2\nFROM t", parser -> parser.withDoubleSlashIntegerDivision()
+                        .withDoubleSlashLineComments(true)),
                 "SELECT 7 FROM t");
     }
 
