@@ -208,6 +208,14 @@ public abstract class AbstractJSqlParser<P> {
         return withFeature(Feature.allowDoubleSlashLineComments, allowDoubleSlashLineComments);
     }
 
+    public P withDoubleSlashIntegerDivision() {
+        return withFeature(Feature.allowDoubleSlashIntegerDivision, true);
+    }
+
+    public P withDoubleSlashIntegerDivision(boolean allowDoubleSlashIntegerDivision) {
+        return withFeature(Feature.allowDoubleSlashIntegerDivision, allowDoubleSlashIntegerDivision);
+    }
+
     public P withBlankLinesAsSeparator(boolean allowBlankLinesAsStatementSeparator) {
         return withFeature(Feature.allowBlankLinesAsStatementSeparator,
                 allowBlankLinesAsStatementSeparator);
