@@ -240,7 +240,7 @@ public class ExpressionDeParser extends AbstractDeParser<Expression>
 
     @Override
     public <S> StringBuilder visit(IntegerDivision division, S context) {
-        deparse(division, " DIV ", context);
+        deparse(division, " " + division.getStringExpression() + " ", context);
         return builder;
     }
 
