@@ -1299,7 +1299,8 @@ public class CCJSqlParser extends AbstractJSqlParser<CCJSqlParser> {
             // Keep the slash tokens separate so that //* remains / followed by a block comment.
             boolean doubleSlash = op == OP_SLASH && getToken(2).kind == OP_SLASH
                     && getToken(2).beginLine == t.endLine
-                    && getToken(2).beginColumn == t.endColumn + 1;
+                    && getToken(2).beginColumn == t.endColumn + 1
+                    && getAsBoolean(Feature.allowDoubleSlashIntegerDivision);
             jj_consume_token(op, getToken(1).image);
             if (doubleSlash) {
                 jj_consume_token(OP_SLASH, getToken(1).image);
