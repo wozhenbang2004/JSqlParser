@@ -963,6 +963,40 @@ public class DuckDBTest {
     }
 
     @Test
+    void testIntegerDivisionOperator() throws JSQLParserException {
+        TestUtils.assertSqlCanBeParsedAndDeparsed(
+                "SELECT 7 // 2, -7 // 2, 7 // -2, 7.0 // 2", true);
+        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7//2"),
+                "SELECT 7 // 2");
+        Assertions.assertEquals("IntegerDivision(Multiplication(2, 9), 4)",
+                tree(CCJSqlParserUtil.parseExpression("2 * 9 // 4", false)));
+        Assertions.assertEquals("IntegerDivision(IntegerDivision(20, 3), 2)",
+                tree(CCJSqlParserUtil.parseExpression("20 // 3 // 2", false)));
+        Assertions.assertEquals("Addition(1, Multiplication(IntegerDivision(7, 2), 3))",
+                tree(CCJSqlParserUtil.parseExpression("1 + 7 // 2 * 3", false)));
+    }
+
+    @Test
+    void testIntegerDivisionCommentBoundaries() throws JSQLParserException {
+        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7 //*x*/ 2"),
+                "SELECT 7 / 2");
+        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse("SELECT 7 // /*x*/ 2"),
+                "SELECT 7 // 2");
+        for (String sql : new String[] {"SELECT 7 / / 2", "SELECT 7 /\n/ 2",
+                "SELECT 7 / /*x*/ / 2"}) {
+            Assertions.assertThrows(JSQLParserException.class, () -> CCJSqlParserUtil.parse(sql));
+        }
+        for (Dialect dialect : new Dialect[] {Dialect.H2, Dialect.SNOWFLAKE}) {
+            TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse(
+                    "SELECT 7 // 2\nFROM t", parser -> parser.withDialect(dialect)),
+                    "SELECT 7 FROM t");
+        }
+        TestUtils.assertStatementCanBeDeparsedAs(CCJSqlParserUtil.parse(
+                "SELECT 7 // 2\nFROM t", parser -> parser.withDoubleSlashLineComments(true)),
+                "SELECT 7 FROM t");
+    }
+
+    @Test
     void testLikeOperators() throws JSQLParserException {
         for (String operator : new String[] {"~~", "~~*", "~~~", "!~~", "!~~*"}) {
             TestUtils.assertSqlCanBeParsedAndDeparsed(
