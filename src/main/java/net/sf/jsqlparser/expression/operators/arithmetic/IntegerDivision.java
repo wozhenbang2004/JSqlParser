@@ -15,10 +15,20 @@ import net.sf.jsqlparser.expression.ExpressionVisitor;
 
 public class IntegerDivision extends BinaryExpression {
 
-    public IntegerDivision() {}
+    private final String operator;
+
+    public IntegerDivision() {
+        this("DIV");
+    }
+
+    /** {@code operator} is {@code DIV} or DuckDB's {@code //}. */
+    public IntegerDivision(String operator) {
+        this.operator = operator;
+    }
 
     public IntegerDivision(Expression leftExpression, Expression rightExpression) {
         super(leftExpression, rightExpression);
+        operator = "DIV";
     }
 
     @Override
@@ -28,7 +38,7 @@ public class IntegerDivision extends BinaryExpression {
 
     @Override
     public String getStringExpression() {
-        return "DIV";
+        return operator;
     }
 
     @Override
