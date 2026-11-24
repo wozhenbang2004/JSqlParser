@@ -1433,6 +1433,12 @@ public enum Feature {
     allowDoubleSlashLineComments(false),
 
     /**
+     * allows DuckDB integer division using {@code //}; disabled by default. When double-slash
+     * line comments are enabled, the lexer treats {@code //} as a comment instead.
+     */
+    allowDoubleSlashIntegerDivision(false),
+
+    /**
      * treats three consecutive newlines as a statement separator (enabled by default). When
      * disabled, blank lines are plain whitespace, so a statement containing them is parsed whole
      * instead of ending, or failing to parse, at the first run of blank lines
